@@ -14,7 +14,10 @@ import logging
 
 from time import sleep
 from programmingtheiot.cda.system.SystemPerformanceManager import SystemPerformanceManager
+import programmingtheiot.common.ConfigConst as ConfigConst
 
+from programmingtheiot.common.ConfigUtil import ConfigUtil
+from programmingtheiot.cda.app.DeviceDataManager import DeviceDataManager
 
 logging.basicConfig(format = '%(asctime)s:%(name)s:%(levelname)s:%(message)s', level = logging.DEBUG)
 
@@ -80,11 +83,19 @@ def main():
 	cda = ConstrainedDeviceApp()
 	cda.startApp()
 	
-	# run for 10 seconds - this can be changed as needed
-	sleep(65)
+	runForever = ConfigUtil().getBoolean(ConfigConst.CONSTRAINED_DEVICE, ConfigConst.RUN_FOREVER_KEY)
+
+	if runForever:
+		while (True):
+			sleep(5)
+
+	else:
+		# run for 10 seconds - this can be changed as needed
+		sleep(65)
 	
-	# optionally stop the app - this can be removed if needed
-	cda.stopApp()
+		# optionally stop the app - this can be removed if needed
+		cda.stopApp(0)
+
 
 if __name__ == '__main__':
 	"""

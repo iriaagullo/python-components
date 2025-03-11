@@ -20,25 +20,40 @@ class SystemPerformanceData(BaseIotData):
 	
 	def __init__(self, d = None):
 		super(SystemPerformanceData, self).__init__(name = ConfigConst.SYSTEM_PERF_MSG, typeID = ConfigConst.SYSTEM_PERF_TYPE, d = d)
+		self.cpuUtil = ConfigConst.DEFAULT_VAL
+		self.memUtil = ConfigConst.DEFAULT_VAL
+		
 		pass
 	
 	def getCpuUtilization(self):
+		return self.cpuUtil
 		pass
 	
 	def getDiskUtilization(self):
+		
 		pass
 	
 	def getMemoryUtilization(self):
+		return self.memUtil
 		pass
 	
 	def setCpuUtilization(self, cpuUtil):
+		self.cpuUtil = cpuUtil
+		self.updateTimeStamp()
 		pass
 	
 	def setDiskUtilization(self, diskUtil):
 		pass
 	
 	def setMemoryUtilization(self, memUtil):
+		self.memUtil = memUtil
+		self.updateTimeStamp()
+		
 		pass
 	
 	def _handleUpdateData(self, data):
+		if data and isinstance(data, SystemPerformanceData):
+			self.cpuUtil = data.getCpuUtilization()
+			self.memUtil = data.getMemoryUtilization()
+		
 		pass
