@@ -18,6 +18,8 @@ from programmingtheiot.cda.sim.BaseActuatorSimTask import BaseActuatorSimTask
 
 from pisense import SenseHAT
 
+
+
 class HvacEmulatorTask(BaseActuatorSimTask):
 	"""
 	Shell representation of class for student implementation.
@@ -25,11 +27,45 @@ class HvacEmulatorTask(BaseActuatorSimTask):
 	"""
 
 	def __init__(self):
+		
+		
+		super( \
+			HvacEmulatorTask, self).__init__( \
+			name = ConfigConst.HVAC_ACTUATOR_NAME, \
+			typeID = ConfigConst.HVAC_ACTUATOR_TYPE, \
+			simpleName = "HVAC")
+		
+		self.sh=SenseHAT(emulate=True)
+
 		pass
 
+
 	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
+		
+		if self.sh.screen:
+			simple_name = self.getSimpleName() if self.getSimpleName() is not None else "Unknown"
+			msg = simple_name + ' ON: ' + str(val) + 'C'
+			self.sh.screen.scroll_text(msg)
+			return 0
+		else:
+			logging.warning("No SenseHAT LED screen instance to write.")
+			return -1
+		
 		pass
 
 	def _deactivateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
+		if self.sh.screen:
+			simple_name = self.getSimpleName() if self.getSimpleName() is not None else "Unknown"
+			msg = simple_name + ' OFF'
+			self.sh.screen.scroll_text(msg)
+
+			# optional sleep (5 seconds) for message to scroll before clearing display
+			sleep(5)
+
+			self.sh.screen.clear()
+			return 0
+		else:
+			logging.warning("No SenseHAT LED screen instance to clear / close.")
+			return -1
 		pass
 	

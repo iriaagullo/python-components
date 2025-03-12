@@ -16,6 +16,8 @@ from programmingtheiot.cda.sim.BaseActuatorSimTask import BaseActuatorSimTask
 
 from pisense import SenseHAT
 
+
+
 class LedDisplayEmulatorTask(BaseActuatorSimTask):
 	"""
 	Shell representation of class for student implementation.
@@ -23,11 +25,32 @@ class LedDisplayEmulatorTask(BaseActuatorSimTask):
 	"""
 
 	def __init__(self):
+		super( \
+		LedDisplayEmulatorTask, self).__init__( \
+			name = ConfigConst.LED_ACTUATOR_NAME, \
+			typeID = ConfigConst.LED_DISPLAY_ACTUATOR_TYPE, \
+			simpleName = "LED_Display")
+		
+		self.sh = SenseHAT(emulate=True)
 		pass
 
 	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
+		if self.sh.screen:
+			self.sh.screen.scroll_text(stateData, size = 8)
+			return 0
+		else:
+			logging.warning("No SenseHAT LED screen instance to write.")
+			return -1
+		
 		pass
 
 	def _deactivateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
+		if self.sh.screen:
+			self.sh.screen.clear()
+			return 0
+		else:
+			logging.warning("No SenseHAT LED screen instance to clear / close.")
+			return -1
+			
 		pass
 	
