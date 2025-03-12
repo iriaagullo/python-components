@@ -6,7 +6,9 @@
 # implementation for the Programming the Internet of Things exercises,
 # and designed to be modified by the student as needed.
 #
-
+import json
+import logging
+from decimal import Decimal
 from json import JSONEncoder
 
 from programmingtheiot.data.ActuatorData import ActuatorData
@@ -44,7 +46,14 @@ class DataUtil():
 		
 		pass
 
-	def systemPerformanceDataToJson(self, data: SystemPerformanceData = None):
+	def systemPerformanceDataToJson(self, data: SystemPerformanceData = None, useDecForFloat: bool = False):
+		if not data:
+			logging.debug("SystemPerformanceData is null. Returning empty string.")
+			return ""
+
+		jsonData = self._generateJsonData(obj=data, useDecForFloat=useDecForFloat)
+		return jsonData
+		
 		pass
 	
 	def jsonToActuatorData(self, jsonData: str = None, useDecForFloat: bool = False):
@@ -127,3 +136,4 @@ class JsonDataEncoder(JSONEncoder):
 	def default(self, o):
 		
 		return o.__dict__
+	
