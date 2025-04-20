@@ -120,23 +120,28 @@ class MqttClientConnector(IPubSubClient):
 		pass
 		
 	def onConnect(self, client, userdata, flags, rc):
-		logging.info("Connected to MQTT broker with result code: " + str(rc))
+		logging.info('MQTT client connected to broker: ' + str(client))
 		pass
 
 	def onDisconnect(self, client, userdata, rc):
-		logging.info("Disconnected from MQTT broker with result code: " + str(rc))
+		logging.info('MQTT client disconnected from broker: ' + str(client))
 		pass
 
 	def onMessage(self, client, userdata, msg):
-		logging.info("Received message on topic {}: {}".format(msg.topic, msg.payload))
+		payload = msg.payload
+		
+		if payload:
+			logging.info('MQTT message received with payload: ' + str(payload.decode("utf-8")))
+		else:
+			logging.info('MQTT message received with no payload: ' + str(msg))
 		pass
 
 	def onPublish(self, client, userdata, mid):
-		logging.info("Message published. mid: " + str(mid))
+		logging.info('MQTT message published: ' + str(client))
 		pass
 
 	def onSubscribe(self, client, userdata, mid, granted_qos):
-		logging.info("Subscribed. mid: {}, QoS: {}".format(mid, granted_qos))
+		logging.info('MQTT client subscribed: ' + str(client))	
 		pass
 
 	
@@ -155,22 +160,56 @@ class MqttClientConnector(IPubSubClient):
 		"""
 		pass
 	
-	def publishMessage(self, resource: ResourceNameEnum = None, msg: str = None, qos: int = ConfigConst.DEFAULT_QOS):
-		logging.info("publishMessage() called with resource: {}, msg: {}, qos: {}".format(resource, msg, qos))
-		return False
+	def publishMessage(self, resource: ResourceNameEnum = None, msg: str = None, qos: int = ConfigConst.DEFAULT_QOS) -> bool:
+		# check validity of resource (topic)
+		if not resource:
+			logging.warning('No topic specified. Cannot publish message.')
+			return False
+		
+		# check validity of message
+		if not msg:
+			logging.warning('No message specified. Cannot publish message to topic: ' + resource.value)
+			return False
+		
+		# check validity of QoS - set to default if necessary
+		if qos < 0 or qos > 2:
+			qos = ConfigConst.DEFAULT_QOS
+		
+		# publish message, and wait for publish to complete before returning
+		msgInfo = self.mqttClient.publish(topic = resource.value, payload = msg, qos = qos)
+		msgInfo.wait_for_publish()
+		
+		return True
 		pass
 	
-	def subscribeToTopic(self, resource: ResourceNameEnum = None, callback = None, qos: int = ConfigConst.DEFAULT_QOS):
+
+	def subscribeToTopic(self, resource: ResourceNameEnum = None, callback = None, qos: int = ConfigConst.DEFAULT_QOS) -> bool:
+		# check validity of resource (topic)
+		if not resource:
+			logging.warning('No topic specified. Cannot subscribe.')
+			return False
 		
-		logging.info("subscribeToTopic() called with resource: {}, qos: {}".format(resource, qos))
-		return False
-	
+		# check validity of QoS - set to default if necessary
+		if qos < 0 or qos > 2:
+			qos = ConfigConst.DEFAULT_QOS
+		
+		# subscribe to topic
+		logging.info('Subscribing to topic %s', resource.value)
+		self.mqttClient.subscribe(resource.value, qos)
+		
+		return True
 		pass
 	
 	def unsubscribeFromTopic(self, resource: ResourceNameEnum = None):
+		# check validity of resource (topic)
+		if not resource:
+			logging.warning('No topic specified. Cannot unsubscribe.')
+			return False
 		
-		logging.info("unsubscribeFromTopic() called with resource: {}".format(resource))
-		return False
+		logging.info('Unsubscribing to topic %s', resource.value)
+		self.mqttClient.unsubscribe(resource.value)
+		
+		return True
 	
 		pass
 
