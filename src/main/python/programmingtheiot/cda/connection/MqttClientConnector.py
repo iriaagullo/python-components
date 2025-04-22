@@ -36,6 +36,10 @@ class MqttClientConnector(IPubSubClient):
 		the same clientID continuously attempts to re-connect, causing the broker to
 		disconnect the previous instance.
 		"""
+		self.clientID = clientID or "DefaultClientID"
+        # Now it's safe to log the client ID
+        #logging.info('\tMQTT Client ID:   ' + self.clientID)
+
 
 		self.config = ConfigUtil()
 		self.dataMsgListener = None
