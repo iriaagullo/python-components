@@ -58,7 +58,7 @@ class CoapClientConnectorTest(unittest.TestCase):
 	def tearDown(self):
 		pass
 
-	@unittest.skip("Ignore for now.")
+	#@unittest.skip("Ignore for now.")
 	def testConnectAndDiscover(self):
 		"""
 		Comment the annotation to test Connect and Discover
