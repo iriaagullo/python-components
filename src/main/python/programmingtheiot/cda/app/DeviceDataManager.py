@@ -97,6 +97,13 @@ class DeviceDataManager(IDataMessageListener):
 			self.configUtil.getFloat( \
 				ConfigConst.CONSTRAINED_DEVICE, ConfigConst.TRIGGER_HVAC_TEMP_CEILING_KEY);
 			
+		self.enableCoapClient = self.configUtil.getBoolean(
+			section=ConfigConst.CONSTRAINED_DEVICE,
+			key=ConfigConst.ENABLE_COAP_CLIENT_KEY
+		)
+
+		if self.enableCoapClient:
+			self.coapClient = CoapClientConnector(dataMsgListener=self)
 		pass
 		
 	def getLatestActuatorDataResponseFromCache(self, name: str = None) -> ActuatorData:
