@@ -88,9 +88,70 @@ class CoapClientConnector(IRequestResponseClient):
 
 	def sendDeleteRequest(self, resource: ResourceNameEnum = None, name: str = None, enableCON: bool = False, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
 		
-		logging.info("sendDeleteRequest llamado.")
-        
-		return False
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing Async DELETE to path: " + resourcePath)
+
+			asyncio.get_event_loop().run_until_complete(
+				self._handleDeleteRequest(
+					resourcePath=resourcePath,
+					enableCON=enableCON
+				)
+			)
+		else:
+			logging.warning("Can't issue Async DELETE - no path or path list provided.")
+			
+
+		'''
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing DELETE with path: " + resourcePath)
+
+			request = self.coapClient.mk_request(defines.Codes.DELETE, path=resourcePath)
+			request.token = generate_random_token(2)
+
+			if not enableCON:
+				request.type = defines.Types["NON"]
+
+			self.coapClient.send_request(
+				request=request,
+				callback=self._onDeleteResponse,
+				timeout=timeout
+			)
+		else:
+			logging.warning("Can't test DELETE - no path or path list provided.")
+
+		'''
+
+	async def _handleDeleteRequest(self, resourcePath: str = None, enableCON: bool = False):
+		try:
+			msgType = NON
+
+			if enableCON:
+				msgType = CON
+
+			fullUri = self.uriPath + resourcePath if resourcePath else self.uriPath
+			msg = Message(mtype=msgType, code=Code.DELETE, uri=fullUri)
+			req = self.coapClient.request(msg)
+			responseData = await req.response
+
+			self._onDeleteResponse(responseData)
+
+		except Exception as e:
+			# TODO: for debugging, you may want to optionally include the stack trace, as shown
+			logging.warning("Failed to process DELETE request for path: " + resourcePath)
+			traceback.print_exception(type(e), e, e.__traceback__)
+
+
+	def _onDeleteResponse(self, response):
+		if not response:
+			logging.warning('DELETE response invalid. Ignoring.')
+			return
+
+		logging.info('DELETE response received: %s', response.payload)
+
 		
 
 	def sendGetRequest(self, resource: ResourceNameEnum = None, name: str = None, enableCON: bool = False, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
@@ -209,10 +270,77 @@ class CoapClientConnector(IRequestResponseClient):
 	
 	def sendPostRequest(self, resource: ResourceNameEnum = None, name: str = None, enableCON: bool = False, payload: str = None, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
 		
-		logging.info("sendPostRequest llamado.")
-        
-		return False
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing Async POST to path: " + resourcePath)
+
+			asyncio.get_event_loop().run_until_complete(
+				self._handlePostRequest(
+					resourcePath=resourcePath,
+					payload=payload,
+					enableCON=enableCON
+				)
+			)
+		else:
+			logging.warning("Can't issue Async POST - no path or path list provided.")
 		
+	'''
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing POST with path: " + resourcePath)
+
+			request = self.coapClient.mk_request(defines.Codes.POST, path=resourcePath)
+			request.token = generate_random_token(2)
+			request.payload = payload
+
+			if not enableCON:
+				request.type = defines.Types["NON"]
+
+			self.coapClient.send_request(
+				request=request,
+				callback=self._onPostResponse,
+				timeout=timeout
+			)
+		else:
+			logging.warning("Can't test POST - no path or path list provided.")
+	'''
+
+	async def _handlePostRequest(self, resourcePath: str = None, payload: str = None, enableCON: bool = False):
+		try:
+			msgType = NON
+
+			if enableCON:
+				msgType = CON
+
+			payloadBytes = b''
+
+			# Decide which encoding to use - can also load from config
+			if payload:
+				payloadBytes = payload.encode('utf-8')
+
+			fullUri = self.uriPath + resourcePath if resourcePath else self.uriPath
+			msg = Message(mtype=msgType, code=Code.POST, uri=fullUri)
+			req = self.coapClient.request(msg)
+			responseData = await req.response
+
+			self._onPostResponse(responseData)
+
+		except Exception as e:
+			# TODO: for debugging, you may want to optionally include the stack trace, as shown
+			logging.warning("Failed to process POST request for path: " + resourcePath)
+			traceback.print_exception(type(e), e, e.__traceback__)
+
+
+	def _onPostResponse(self, response):
+		if not response:
+			logging.warning('POST response invalid. Ignoring.')
+			return
+
+		logging.info('POST response received: %s', response.payload)
+	
+
 
 	def sendPutRequest(self, resource: ResourceNameEnum = None, name: str = None, enableCON: bool = False, payload: str = None, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
 		
