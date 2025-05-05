@@ -216,9 +216,77 @@ class CoapClientConnector(IRequestResponseClient):
 
 	def sendPutRequest(self, resource: ResourceNameEnum = None, name: str = None, enableCON: bool = False, payload: str = None, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
 		
-		logging.info("sendPutRequest llamado.")
-        
-		return False
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing Async PUT to path: " + resourcePath)
+
+			asyncio.get_event_loop().run_until_complete(
+				self._handlePutRequest(
+					resourcePath=resourcePath,
+					payload=payload,
+					enableCON=enableCON
+				)
+			)
+		else:
+			logging.warning("Can't issue Async PUT - no path or path list provided.")
+
+	'''
+	if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			logging.info("Issuing PUT with path: " + resourcePath)
+
+			request = self.coapClient.mk_request(defines.Codes.PUT, path=resourcePath)
+			request.token = generate_random_token(2)
+			request.payload = payload
+
+			if not enableCON:
+				request.type = defines.Types["NON"]
+
+			self.coapClient.send_request(
+				request=request,
+				callback=self._onPutResponse,
+				timeout=timeout
+			)
+		else:
+			logging.warning("Can't test PUT - no path or path list provided.")
+	'''
+
+
+	async def _handlePutRequest(self, resourcePath: str = None, payload: str = None, enableCON: bool = False):
+		try:
+			msgType = NON
+
+			if enableCON:
+				msgType = CON
+
+			payloadBytes = b''
+
+			# Decide which encoding to use - can also load from config
+			if payload:
+				payloadBytes = payload.encode('utf-8')
+
+			fullUri = self.uriPath + resourcePath if resourcePath else self.uriPath
+			msg = Message(mtype=msgType, code=Code.PUT, uri=fullUri)
+			req = self.coapClient.request(msg)
+			responseData = await req.response
+
+			self._onPutResponse(responseData)
+
+		except Exception as e:
+			# TODO: for debugging, you may want to optionally include the stack trace, as shown
+			logging.warning("Failed to process PUT request for path: " + resourcePath)
+			traceback.print_exception(type(e), e, e.__traceback__)
+
+
+	def _onPutResponse(self, response):
+		if not response:
+			logging.warning('PUT response invalid. Ignoring.')
+			return
+
+		logging.info('PUT response received: %s', response.payload)
+
 
 	def setDataMessageListener(self, listener: IDataMessageListener = None) -> bool:
 		self.dataMsgListener = listener
