@@ -69,6 +69,7 @@ class DefaultDataMessageListener(IDataMessageListener):
 		@param data The ActuatorData message received.
 		@return bool True on success; False otherwise.
 		"""
+		self.changed()
 		if data:
 			logging.info('Actuator Command Msg: ' + str(data.getCommand()))
 			

@@ -421,18 +421,157 @@ class CoapClientConnector(IRequestResponseClient):
 		pass
 
 	def startObserver(self, resource: ResourceNameEnum = None, name: str = None, ttl: int = IRequestResponseClient.DEFAULT_TTL) -> bool:
-		
-		logging.info("startObserver llamado.")
-        
-		return False
+		'''
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			if resourcePath in self.observeRequests:
+				logging.warning("Already observing resource %s. Ignoring start observe request.", resourcePath)
+				return
+
+			asyncio.get_event_loop().run_until_complete(
+				asyncio.ensure_future(self._handleStartObserveRequest(resourcePath))
+			)
+		else:
+			logging.warning("Can't issue Async OBSERVE - GET - no path or path list provided.")
+
+		'''
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			if resourcePath in self.observeRequests:
+				logging.warning("Already observing resource %s. Ignoring start observe request.", resourcePath)
+				return
+
+			self.observeRequests[resourcePath] = None
+
+			observeActuatorCmdHandler = HandleActuatorEvent(
+				listener=self.dataMsgListener,
+				resourcePath=resourcePath,
+				requests=self.observeRequests
+			)
+
+			try:
+				self.coapClient.observe(
+					path=resourcePath,
+					callback=observeActuatorCmdHandler.handleActuatorResponse
+				)
+			except Exception as e:
+				logging.warning("Failed to observe path: " + resourcePath)
+		else:
+			logging.warning("Can't start observe - no path or path list provided.")
+	'''
+
+
+	async def _handleStartObserveRequest(self, resourcePath: str = None):
+		logging.info('Handle start observe invoked. Waiting for each input: ' + resourcePath)
+
+	
+		fullUri = self.uriPath + resourcePath if resourcePath else self.uriPath
+		msg = Message( code=Code.GET, uri=fullUri, observe=0)
+		req = self.coapClient.request(msg)
+
+		self.observeRequests[resourcePath] = req
+
+		try:
+			responseData = await req.response
+
+			# TODO: validate response first
+			self._onGetResponse(responseData)
+
+
+			async for responseData in req.observation:
+				# TODO: validate response first
+				self._onGetResponse(responseData)
+
+				req.observation.cancel()
+				break
+
+		except Exception as e:
+			# TODO: log warning and possibly stack trace, then be sure to stop observing...
+			logging.warning("Failed to execute OBSERVE - GET. Recovering...")
+			traceback.print_exception(type(e), e, e.__traceback__)
+
+	'''
 
 	def stopObserver(self, resource: ResourceNameEnum = None, name: str = None, timeout: int = IRequestResponseClient.DEFAULT_TIMEOUT) -> bool:
+		'''
+			if resource or name:
+				resourcePath = self._createResourcePath(resource, name)
+
+				if resourcePath not in self.observeRequests:
+					logging.warning("Resource %s not being observed. Ignoring stop observe request.", resourcePath)
+					return
+
+				asyncio.get_event_loop().run_until_complete(
+					self._handleStartObserveRequest(resourcePath)
+				)
+			else:
+				logging.warning("Can't cancel OBSERVE - GET - no path provided.")
+
+		'''
+		if resource or name:
+			resourcePath = self._createResourcePath(resource, name)
+
+			if resourcePath not in self.observeRequests:
+				logging.warning("Resource %s not being observed. Ignoring stop observe request.", resourcePath)
+				return
+
+			response = self.observeRequests[resourcePath]
+
+			if response:
+				logging.info("Canceling observe for resource %s.", resourcePath)
+
+				try:
+					self.coapClient.cancel_observing(response=response, send_rst=True)
+					del self.observeRequests[resourcePath]
+					logging.info("Canceled observe for resource %s.", resourcePath)
+				except Exception as e:
+					logging.warning("Failed to cancel observe for resource %s.", resourcePath)
+			else:
+				logging.warning("No response yet for observed resource %s. Attempting to stop anyway.", resourcePath)
+
+				try:
+					self.coapClient.cancel_observing(response=None, send_rst=True)
+					logging.info("Canceled observe for resource %s.", resourcePath)
+				except Exception as e:
+					logging.warning("Failed to cancel observe for resource %s.", resourcePath)
+		else:
+			logging.warning("Can't stop observe - no path or path list provided.")
+	
+
+
+	'''
+	async def _handleStopObserveRequest(self, resourcePath: str = None, ignoreErr: bool = False):
 		
-		logging.info("stopObserver llamado.")
-        
-		return False
-	
-	
+		if resourcePath in self.observeRequests:
+			logging.info('Handle stop observe invoked: ' + resourcePath)
+
+		
+			fullUri = self.uriPath + resourcePath if resourcePath else self.uriPath
+			msg = Message( code=Code.GET, uri=fullUri, observe=0)
+			req = self.coapClient.request(msg)
+
+			self.observeRequests[resourcePath] = req
+
+			try:
+				req.observation.cancel()
+				
+			except Exception as e:
+				if not ignoreErr:
+					logging.warning("Failed to cancel OBSERVE - GET: " + resourcePath)
+			
+			try:
+				del self.observeRequests[resourcePath]
+			except Exception as e:
+				if not ignoreErr:
+					logging.warning("Failed to remove observable from list: " + resourcePath)
+			
+		else:
+					logging.warning('Resource not currently under observation. Ignoring: ' + resourcePath)
+
+	'''
+
 	def _initClient(self):
 		asyncio.get_event_loop().run_until_complete(self._initClientContext())
 		'''
@@ -474,4 +613,37 @@ class CoapClientConnector(IRequestResponseClient):
 			return resourcePath
 	
 
+
+
+class HandleActuatorEvent:
+	def __init__(
+		self,
+		listener: IDataMessageListener = None,
+		resourcePath: str = None,
+		requests=None
+	):
+		self.listener = listener
+		self.resourcePath = resourcePath
+		self.observeRequests = requests
+
+	def handleActuatorResponse(self, response):
+		if response:
+			jsonData = response.payload
+
+			self.observeRequests[self.resourcePath] = response
+
+			logging.info(
+				"Received actuator command response to resource %s: %s",
+				self.resourcePath, jsonData
+			)
+
+			if self.listener:
+				try:
+					data = DataUtil().jsonToActuatorData(jsonData=jsonData)
+					self.listener.handleActuatorCommandMessage(data=data)
+				except Exception:
+					logging.warning(
+						"Failed to decode actuator data for resource %s. Ignoring: %s",
+						self.resourcePath, jsonData
+					)
 
