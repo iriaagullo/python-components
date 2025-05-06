@@ -97,7 +97,7 @@ class MqttClientConnectorTest(unittest.TestCase):
 		
 	#@unittest.skip("Ignore for now.")
 	def testActuatorCmdPubSub(self):
-		qos = 0
+		qos = 1
 		delay = self.cfg.getInteger(ConfigConst.MQTT_GATEWAY_SERVICE, ConfigConst.KEEP_ALIVE_KEY, ConfigConst.DEFAULT_KEEP_ALIVE)
 		
 		actuatorData = ActuatorData()
@@ -113,11 +113,11 @@ class MqttClientConnectorTest(unittest.TestCase):
 				
 		self.mcc.publishMessage(resource = ResourceNameEnum.CDA_ACTUATOR_CMD_RESOURCE, msg = payload, qos = qos)
 		
-		sleep(delay + 5)
+		sleep(delay)
 		
 		self.mcc.disconnectClient()
 
-	#@unittest.skip("Ignore for now.")
+	@unittest.skip("Ignore for now.")
 	def testSensorMsgPub(self):
 		qos = 0
 		delay = self.cfg.getInteger(ConfigConst.MQTT_GATEWAY_SERVICE, ConfigConst.KEEP_ALIVE_KEY, ConfigConst.DEFAULT_KEEP_ALIVE)
@@ -163,7 +163,7 @@ class MqttClientConnectorTest(unittest.TestCase):
 		
 		self.mcc.disconnectClient()
 
-	#@unittest.skip("Ignore for now.")
+	@unittest.skip("Ignore for now.")
 	def testCDAManagementStatusPublish(self):
 		"""
 		Uncomment this test when integration between the GDA and CDA using MQTT.

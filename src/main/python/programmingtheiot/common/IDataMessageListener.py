@@ -6,7 +6,7 @@
 # 
 # Copyright (c) 2020 by Andrew D. King
 # 
-
+from aiocoap.resource import ObservableResource
 from programmingtheiot.common.ResourceNameEnum import ResourceNameEnum
 
 from programmingtheiot.data.ActuatorData import ActuatorData
@@ -57,6 +57,8 @@ class IDataMessageListener():
 		but with the response flag set to True.
 		"""
 		pass
+
+	
 	
 	def handleActuatorCommandResponse(self, data: ActuatorData) -> bool:
 		"""
