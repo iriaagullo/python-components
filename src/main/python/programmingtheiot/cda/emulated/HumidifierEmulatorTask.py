@@ -36,14 +36,15 @@ class HumidifierEmulatorTask(BaseActuatorSimTask):
 				ConfigConst.CONSTRAINED_DEVICE, ConfigConst.ENABLE_EMULATOR_KEY)
 
 		self.sh = SenseHAT(emulate = enableEmulation)
-		
+		#self.sh = SenseHAT(emulate = True)
+		#self.sh.screen.close()
 		pass
 
 	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
 		if self.sh.screen:
 			simple_name = self.getSimpleName() if self.getSimpleName() is not None else "Unknown"
 			msg = simple_name + ' ON: ' + str(val) + 'C'
-			self.sh.screen.scroll_text(msg)
+			#self.sh.screen.scroll_text(msg)
 			return 0
 		else:
 			logging.warning("No SenseHAT LED screen instance to write.")
@@ -55,12 +56,12 @@ class HumidifierEmulatorTask(BaseActuatorSimTask):
 		if self.sh.screen:
 			simple_name = self.getSimpleName() if self.getSimpleName() is not None else "Unknown"  # Verificación para None
 			msg = simple_name + ' OFF'
-			self.sh.screen.scroll_text(msg)
+			#self.sh.screen.scroll_text(msg)
 
 			# optional sleep (5 seconds) for message to scroll before clearing display
 			sleep(5)
 
-			self.sh.screen.clear()
+			#self.sh.screen.clear()
 			return 0
 		else:
 			logging.warning("No SenseHAT LED screen instance to clear / close.")
