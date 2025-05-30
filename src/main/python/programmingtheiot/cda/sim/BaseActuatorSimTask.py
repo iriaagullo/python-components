@@ -39,7 +39,7 @@ class BaseActuatorSimTask():
 		pass
 	
 	def getSimpleName(self) -> str:
-		pass
+		return self.simpleName
 	
 	def updateActuator(self, data: ActuatorData) -> ActuatorData:
 		"""
@@ -95,7 +95,7 @@ class BaseActuatorSimTask():
 			return actuatorResponse
 
 		return None
-		pass
+		
 		
 	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
 		"""
@@ -112,7 +112,7 @@ class BaseActuatorSimTask():
 		logging.info("Simulating %s actuator ON: %s", self.name, msg)
 
 		return 0
-		pass
+		
 		
 	def _deactivateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
 		"""
@@ -128,5 +128,5 @@ class BaseActuatorSimTask():
 		logging.info("Simulating %s actuator OFF: %s", self.name, msg)
 
 		return 0
-		pass
+		
 		

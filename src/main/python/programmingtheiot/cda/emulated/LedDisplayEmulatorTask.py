@@ -32,11 +32,12 @@ class LedDisplayEmulatorTask(BaseActuatorSimTask):
 			simpleName = "LED_Display")
 		
 		self.sh = SenseHAT(emulate=True)
+		self.sh.screen.close()
 		pass
 
 	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
 		if self.sh.screen:
-			self.sh.screen.scroll_text(stateData, size = 8)
+			#self.sh.screen.scroll_text(stateData, size = 8)
 			return 0
 		else:
 			logging.warning("No SenseHAT LED screen instance to write.")
@@ -46,7 +47,7 @@ class LedDisplayEmulatorTask(BaseActuatorSimTask):
 
 	def _deactivateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
 		if self.sh.screen:
-			self.sh.screen.clear()
+			#self.sh.screen.clear()
 			return 0
 		else:
 			logging.warning("No SenseHAT LED screen instance to clear / close.")

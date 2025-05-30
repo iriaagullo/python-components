@@ -33,7 +33,7 @@ class PressureSensorEmulatorTask(BaseSensorSimTask):
 				ConfigConst.CONSTRAINED_DEVICE, ConfigConst.ENABLE_EMULATOR_KEY)
 
 		self.sh = SenseHAT(emulate = enableEmulation)
-		
+		self.sh.screen.close()
 		pass
 	
 	def generateTelemetry(self) -> SensorData:
@@ -45,4 +45,4 @@ class PressureSensorEmulatorTask(BaseSensorSimTask):
 		self.latestSensorData = sensorData
 
 		return sensorData
-		pass
+		
